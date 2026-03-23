@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>KaiLens — Smart Kitchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: #e8e0f0; }
+  body { display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; }
+
+  /* ── DESIGN TOKENS ── */
+  :root {
+    --bg: #FFF8F0; --bg2: #FFFFFF; --card: #FFFFFF; --card2: #FDF5EC;
+    --teal: #00C2B2; --teal-dim: #E0FAF8; --teal-dim2: #B8F2EE; --teal-dark: #007A72;
+    --txt: #1A1A2E; --muted: #9B8EA8; --border: #EDE8F5;
+    --coral: #FF6B6B; --coral-bg: #FFF0F0;
+    --amber: #FF9F43; --amber-bg: #FFF4E6;
+    --lemon: #FECA57; --lemon-bg: #FFFDE7;
+    --mint: #48DBBB;
+    --sky: #54A0FF; --sky-bg: #EBF3FF;
+    --lilac: #A29BFE; --lilac-bg: #F0EEFF;
+    --green: #00B894; --green-bg: #E0FAF5;
+    --orange: #FF9F43; --orange-bg: #FFF4E6;
+    --red: #FF6B6B; --red-bg: #FFF0F0;
+    --purple: #A29BFE;
+    --shadow: 0 2px 16px rgba(26,26,46,0.08);
+    --shadow-md: 0 6px 24px rgba(26,26,46,0.12);
+    --shadow-lg: 0 12px 40px rgba(26,26,46,0.16);
+  }
+
+  /* ── PHONE SHELL ── */
+  #app {
+    width: 100%; max-width: 430px; height: 100vh; height: 100svh;
+    background: var(--bg); display: flex; flex-direction: column;
+    overflow: hidden; position: relative;
+    box-shadow: 0 0 60px rgba(0,0,0,0.3);
+  }
+
+  /* ── SCREENS ── */
+  .screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ── TYPOGRAPHY ── */
+  .f { font-family: 'Fredoka', sans-serif; }
+  .n { font-family: 'Nunito', sans-serif; }
+
+  /* ── BOTTOM NAV ── */
+  #nav {
+    display: flex; align-items: center; background: var(--bg2);
+    border-top: 1.5px solid var(--border); flex-shrink: 0;
+    box-shadow: 0 -4px 20px rgba(26,26,46,0.06); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; cursor: pointer; color: var(--muted); transition: color 0.2s; }
+  .nav-tab.active { color: var(--tab-color, var(--teal)); }
+  .nav-tab svg { width: 20px; height: 20px; }
+  .nav-tab span { font-size: 9px; font-weight: 500; font-family: 'Nunito', sans-serif; }
+  .nav-tab.active span { font-weight: 700; }
+  .nav-cam {
+    flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;
+  }
+  .cam-btn {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--mint));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 24px rgba(0,194,178,0.5), 0 0 0 4px var(--bg2);
+    border: 3px solid var(--bg2); cursor: pointer; transform: translateY(-10px);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .cam-btn:active { transform: translateY(-8px) scale(0.96); }
+  .cam-btn svg { width: 26px; height: 26px; }
+
+  /* ── LOGO ── */
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .logo-box {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--teal), var(--mint));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,194,178,0.4);
+  }
+  .logo-text { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--txt); }
+  .logo-text span { color: var(--teal); }
+
+  /* ── BACK BUTTON ── */
+  .back-btn {
+    width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    box-shadow: var(--shadow); border: 1px solid var(--border); flex-shrink: 0;
+  }
+
+  /* ── CARDS ── */
+  .card { background: var(--bg2); border-radius: 16px; box-shadow: var(--shadow); }
+  .pill { border-radius: 999px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--green-bg); border: 1.5px solid var(--green);
+    border-radius: 20px; padding: 10px 20px; z-index: 999; white-space: nowrap;
+    box-shadow: var(--shadow-md); font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 700; color: var(--green); display: none;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  @keyframes scanline { 0%{top:8%} 50%{top:75%} 100%{top:8%} }
+  .fade-in { animation: fadeIn 0.3s ease; }
+
+  /* ── SECTION TABS ── */
+  .sec-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 12px 6px; border-radius: 18px; cursor: pointer; background: var(--card);
+    box-shadow: var(--shadow); transition: all 0.2s;
+  }
+  .sec-tab.active { box-shadow: var(--shadow-md); }
+  .sec-tab .emoji { font-size: 26px; }
+  .sec-tab .label { font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 700; }
+  .sec-tab .count { border-radius: 10px; padding: 2px 8px; font-size: 10px; font-weight: 600; font-family: 'Nunito', sans-serif; }
+
+  /* ── FILTER PILLS ── */
+  .filters { display: flex; gap: 6px; padding: 0 20px 16px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    background: var(--card); color: var(--muted); border: 1.5px solid var(--border);
+    cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.2s; white-space: nowrap;
+  }
+  .filter-pill.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+  /* ── RECIPE CARD ── */
+  .recipe-card { background: var(--card); border-radius: 20px; overflow: hidden; margin-bottom: 12px; box-shadow: var(--shadow); cursor: pointer; }
+  .recipe-hero { display: flex; align-items: center; justify-content: center; position: relative; }
+  .recipe-hero .emoji { font-size: 40px; }
+  .recipe-hero.tall .emoji { font-size: 52px; }
+
+  /* ── INGREDIENT CARD ── */
+  .ing-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border-radius: 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+
+  /* ── EXPIRY BADGE ── */
+  .exp-ok { background: var(--green-bg); color: var(--green); border: 1.5px solid rgba(0,184,148,0.3); }
+  .exp-warn { background: var(--orange-bg); color: var(--orange); border: 1.5px solid rgba(255,159,67,0.3); }
+  .exp-bad { background: var(--red-bg); color: var(--red); border: 1.5px solid rgba(255,107,107,0.3); }
+  .exp-badge { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; font-family: 'Nunito', sans-serif; }
+
+  /* ── CUISINE PILL ── */
+  .cuisine-pill { border-radius: 999px; padding: 1px 7px; font-size: 9px; font-weight: 700; font-family: 'Nunito', sans-serif; }
+
+  /* ── ACTION CARD ── */
+  .action-card { border-radius: 16px; padding: 14px; cursor: pointer; position: relative; overflow: hidden; }
+
+  /* ── SCAN SCREEN ── */
+  .scan-bg { flex: 1; background: #0a0f0e; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .scan-bracket { position: absolute; width: 28px; height: 28px; border-color: var(--teal); border-style: solid; border-width: 0; z-index: 10; opacity: 0.8; }
+  .scan-line { position: absolute; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--teal), transparent); box-shadow: 0 0 12px var(--teal); z-index: 5; border-radius: 2px; animation: scanline 2.5s ease-in-out infinite; }
+  .processing-step { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; max-width: 300px; }
+
+  /* ── INPUT ── */
+  input, textarea { font-family: 'Nunito', sans-serif; }
+  input:focus, textarea:focus { outline: none; }
+
+  /* ── KOLLECTION ── */
+  .koll-card { background: var(--card); border-radius: 20px; padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+
+  /* ── KALENDA ── */
+  .week-day { flex-shrink: 0; min-width: 44px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; padding: 8px 6px; border: 1.5px solid var(--border); background: var(--card); transition: all 0.2s; }
+  .week-day.active { background: var(--teal-dim); border-color: var(--teal); }
+  .macro-card { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 6px; text-align: center; box-shadow: var(--shadow); }
+  .meal-card { margin: 0 16px 10px; background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; }
+  .meal-card.swapping { background: var(--teal-dim); border-color: var(--teal); }
+  .swap-sheet { border-top: 0.5px solid rgba(0,194,178,0.3); background: var(--teal-dim); padding: 12px 14px; }
+  .swap-option { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--card); border-radius: 12px; margin-bottom: 8px; cursor: pointer; box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- Screens rendered here -->
+  <div id="screen-container" class="screen"></div>
+
+  <!-- Bottom Nav -->
+  <div id="nav" style="display:none;">
+    <div class="nav-tab" id="nav-kai" style="--tab-color: #FF6B6B" onclick="navigate('kai','feed')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span>Kai</span>
+    </div>
+    <div class="nav-tab" id="nav-Kitchen" style="--tab-color: #54A0FF" onclick="navigate('Kitchen','kitchen')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2M8 7V5a2 2 0 0 0-4 0v2"/></svg>
+      <span>Kitchen</span>
+    </div>
+    <div class="nav-cam">
+      <div class="cam-btn" onclick="showScreen('scanmode')">
+        <svg fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+    </div>
+    <div class="nav-tab" id="nav-Kollection" style="--tab-color: #00C2B2" onclick="navigate('Kollection','kollection')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Kollection</span>
+    </div>
+    <div class="nav-tab" id="nav-Kalenda" style="--tab-color: #A29BFE" onclick="navigate('Kalenda','kalenda')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Kalenda</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const INGREDIENTS = {
+  fridge: [
+    { icon:"🥚", name:"Eggs", detail:"6 remaining", expiry:"5 days", status:"ok" },
+    { icon:"🥛", name:"Milk", detail:"1L", expiry:"2 days", status:"warn" },
+    { icon:"🧀", name:"Parmesan", detail:"~200g block", expiry:"14 days", status:"ok" },
+    { icon:"🥬", name:"Spinach", detail:"1 bag", expiry:"Use today!", status:"bad" },
+    { icon:"🧈", name:"Butter", detail:"250g", expiry:"21 days", status:"ok" },
+    { icon:"🍗", name:"Chicken breast", detail:"500g", expiry:"Tomorrow", status:"warn" },
+  ],
+  pantry: [
+    { icon:"🍝", name:"Spaghetti", detail:"500g", expiry:"180 days", status:"ok" },
+    { icon:"🧄", name:"Garlic", detail:"1 bulb", expiry:"5 days", status:"ok" },
+    { icon:"🥫", name:"Crushed Tomatoes", detail:"2 cans", expiry:"365 days", status:"ok" },
+    { icon:"🫙", name:"Olive Oil", detail:"750ml", expiry:"90 days", status:"ok" },
+    { icon:"🧂", name:"Salt", detail:"Full", expiry:"Never", status:"ok" },
+  ],
+  freezer: [
+    { icon:"🥩", name:"Beef mince", detail:"500g", expiry:"60 days", status:"ok" },
+    { icon:"🍤", name:"Frozen prawns", detail:"300g", expiry:"30 days", status:"ok" },
+  ],
+};
+
+const SCAN_MODES = {
+  fridge:  { key:"fridge",  emoji:"🧊", label:"Fridge",  desc:"Fresh food, dairy, leftovers", color:"#54A0FF", bg:"#EBF3FF", tips:["Dairy","Veggies","Leftovers"] },
+  pantry:  { key:"pantry",  emoji:"🥫", label:"Pantry",  desc:"Cans, dry goods, condiments",  color:"#FF9F43", bg:"#FFF4E6", tips:["Cans","Pasta","Oils"] },
+  freezer: { key:"freezer", emoji:"❄️", label:"Freezer", desc:"Frozen meat, veg, meals",       color:"#A29BFE", bg:"#F0EEFF", tips:["Meat","Veg","Meals"] },
+};
+
+const FEED_RECIPES = [
+  { id:1, emoji:"🍝", title:"Carbonara — no cream!", time:"20 min", cuisine:"Italian", by:"Maria R.", avColor:"#00C2B2", ready:true, likes:2401, saved:false, liked:false },
+  { id:2, emoji:"🥘", title:"Butter Chicken", time:"45 min", cuisine:"Indian", by:"James K.", avColor:"#A29BFE", likes:1102, saved:false, liked:false },
+  { id:3, emoji:"🍜", title:"Mum's Ramen", time:"60 min", cuisine:"Asian", by:"Sarah L.", avColor:"#FF6B6B", likes:3204, saved:false, liked:false },
+  { id:4, emoji:"🥗", title:"Spinach Parmesan", time:"10 min", cuisine:"Salads", by:"Maria R.", avColor:"#00C2B2", ready:true, likes:891, saved:false, liked:false },
+  { id:5, emoji:"🍕", title:"Margherita Pizza", time:"35 min", cuisine:"Italian", by:"James K.", avColor:"#A29BFE", likes:2100, saved:false, liked:false },
+  { id:6, emoji:"🍳", title:"French Omelette", time:"15 min", cuisine:"Breakfast", by:"Sarah L.", avColor:"#FF6B6B", ready:true, likes:603, saved:false, liked:false },
+  { id:7, emoji:"🥩", title:"Pan Seared Steak", time:"20 min", cuisine:"Mains", by:"Raj M.", avColor:"#FF9F43", ready:true, likes:988, saved:false, liked:false },
+  { id:8, emoji:"🥞", title:"Fluffy Pancakes", time:"15 min", cuisine:"Breakfast", by:"Lena T.", avColor:"#54A0FF", likes:739, saved:false, liked:false },
+];
+
+const COOKBOOK = [
+  { icon:"🍝", title:"Creamy Garlic Butter Pasta", time:"20 min", cuisine:"Italian", ready:false, missing:3 },
+  { icon:"🍳", title:"Spinach & Egg Scramble", time:"10 min", cuisine:"Breakfast", ready:true },
+  { icon:"🥘", title:"Chicken Tikka Masala", time:"45 min", cuisine:"Indian", ready:false, missing:2 },
+  { icon:"🥗", title:"Spinach Parmesan Salad", time:"10 min", cuisine:"Salads", ready:true },
+  { icon:"🍜", title:"Mum's Ramen", time:"60 min", cuisine:"Asian", ready:false, missing:4 },
+  { icon:"🍕", title:"Margherita Pizza", time:"35 min", cuisine:"Italian", ready:false, missing:1 },
+  { icon:"🍳", title:"French Omelette", time:"15 min", cuisine:"Breakfast", ready:true },
+  { icon:"🥩", title:"Pan Seared Steak", time:"20 min", cuisine:"Mains", ready:true },
+];
+
+const MEALS = {
+  17: [
+    { type:"Breakfast", emoji:"🥚", name:"Spinach Omelette", kcal:320, note:"Uses expiring spinach" },
+    { type:"Lunch",     emoji:"🥗", name:"Parmesan Salad",   kcal:410, note:"From your Kollection" },
+    { type:"Dinner",    emoji:"🍝", name:"Garlic Pasta",     kcal:620, note:"Maria R. recipe" },
+  ],
+  18: [
+    { type:"Breakfast", emoji:"🍳", name:"French Omelette",     kcal:340, note:"Ready to cook now" },
+    { type:"Lunch",     emoji:"🍝", name:"Creamy Garlic Pasta", kcal:520, note:"3 items needed" },
+    { type:"Dinner",    emoji:"🍛", name:"Butter Chicken",       kcal:680, note:"James K. recipe" },
+    { type:"Snack",     emoji:"🫐", name:"Yoghurt & Berries",    kcal:180, note:"In fridge" },
+  ],
+  19: [
+    { type:"Breakfast", emoji:"🥞", name:"Fluffy Pancakes",  kcal:380, note:"Uses milk expiring soon" },
+    { type:"Lunch",     emoji:"🥘", name:"Chicken Tikka",    kcal:560, note:"2 items needed" },
+    { type:"Dinner",    emoji:"🍕", name:"Margherita Pizza", kcal:720, note:"1 item needed" },
+  ],
+};
+
+const SWAP_OPTIONS = {
+  Breakfast: [
+    { emoji:"🥞", name:"Fluffy Pancakes", kcal:380, note:"Uses expiring milk" },
+    { emoji:"🍳", name:"Shakshuka",       kcal:310, note:"Ready to cook" },
+    { emoji:"🌾", name:"Overnight Oats",  kcal:290, note:"Prep tonight" },
+  ],
+  Lunch: [
+    { emoji:"🥗", name:"Parmesan Salad",   kcal:410, note:"5 min, ready now" },
+    { emoji:"🥪", name:"Chicken Sandwich", kcal:480, note:"Uses expiring chicken" },
+    { emoji:"🍜", name:"Quick Ramen",      kcal:520, note:"2 items needed" },
+  ],
+  Dinner: [
+    { emoji:"🍝", name:"Garlic Butter Pasta", kcal:620, note:"Ready to cook" },
+    { emoji:"🥘", name:"Chicken Stir Fry",    kcal:540, note:"Uses expiring chicken" },
+    { emoji:"🍕", name:"Margherita Pizza",     kcal:720, note:"1 item needed" },
+  ],
+  Snack: [
+    { emoji:"🧀", name:"Cheese & Crackers", kcal:160, note:"Ready now" },
+    { emoji:"🥚", name:"Hard Boiled Eggs",  kcal:140, note:"Ready now" },
+    { emoji:"🍌", name:"Banana",             kcal:90,  note:"In your fridge" },
+  ],
+};
+
+const WEEK = [
+  { day:"Mon", date:17, meals:true },
+  { day:"Tue", date:18, meals:true, today:true },
+  { day:"Wed", date:19, meals:true },
+  { day:"Thu", date:20, meals:false },
+  { day:"Fri", date:21, meals:false },
+  { day:"Sat", date:22, meals:false },
+  { day:"Sun", date:23, meals:false },
+];
+
+const CUISINE_COLORS = {
+  Italian:   { bg:"#FFF4E6", color:"#FF9F43" },
+  Breakfast: { bg:"#FFFDE7", color:"#F9CA24" },
+  Indian:    { bg:"#FFF0F0", color:"#FF6B6B" },
+  Salads:    { bg:"#E0FAF5", color:"#00B894" },
+  Asian:     { bg:"#EBF3FF", color:"#54A0FF" },
+  Mains:     { bg:"#F0EEFF", color:"#A29BFE" },
+  default:   { bg:"#E0FAF8", color:"#00C2B2" },
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {
+  activeNav: "Kitchen",
+  currentScreen: "kitchen",
+  kitchenTab: "fridge",
+  feedFilter: "All",
+  kollFilter: "All",
+  kollSearch: "",
+  scanMode: "fridge",
+  scanPhase: "ready",   // ready|processing|results|error
+  scanImage: null,
+  scannedItems: [],
+  addedScanItems: [],
+  scanError: null,
+  kalendaDay: 18,
+  swapTarget: null,
+  mealOverrides: {},
+  importUrl: "",
+  importState: "idle",
+  feedRecipes: JSON.parse(JSON.stringify(FEED_RECIPES)),
+};
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+const expBadge = s => s === "ok" ? "exp-ok" : s === "warn" ? "exp-warn" : "exp-bad";
+const cc = cuisine => CUISINE_COLORS[cuisine] || CUISINE_COLORS.default;
+const logo = `
+  <div class="logo">
+    <div class="logo-box"><svg width="17" height="17" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+    <span class="logo-text f">KAI<span>Lens</span></span>
+  </div>`;
+const backBtn = (fn) => `<div class="back-btn" onclick="${fn}" style="cursor:pointer"><svg width="14" height="14" fill="none" stroke="#1A1A2E" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>`;
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = "✓ " + msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 2500);
+}
+
+function navigate(navName, screen) {
+  state.activeNav = navName;
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  const tab = document.getElementById("nav-" + navName);
+  if (tab) tab.classList.add("active");
+  showScreen(screen);
+}
+
+function showScreen(screen, opts = {}) {
+  state.currentScreen = screen;
+  const noNav = ["scanmode","scan"].includes(screen);
+  document.getElementById("nav").style.display = noNav ? "none" : "flex";
+
+  Object.assign(state, opts);
+  render();
+}
+
+// ─────────────────────────────────────────────
+// RENDER ENGINE
+// ─────────────────────────────────────────────
+function render() {
+  const container = document.getElementById("screen-container");
+  switch(state.currentScreen) {
+    case "kitchen":   container.innerHTML = renderKitchen(); break;
+    case "feed":      container.innerHTML = renderFeed(); break;
+    case "kollection":container.innerHTML = renderKollection(); break;
+    case "kalenda":   container.innerHTML = renderKalenda(); break;
+    case "scanmode":  container.innerHTML = renderScanMode(); break;
+    case "scan":      container.innerHTML = renderScan(); break;
+    case "import":    container.innerHTML = renderImport(); break;
+    default:          container.innerHTML = renderKitchen();
+  }
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: KITCHEN
+// ─────────────────────────────────────────────
+function renderKitchen() {
+  const tab = state.kitchenTab;
+  const SM = {
+    fridge:  { color:"#54A0FF", bg:"#EBF3FF", emoji:"🧊", label:"Fridge"  },
+    pantry:  { color:"#FF9F43", bg:"#FFF4E6", emoji:"🥫", label:"Pantry"  },
+    freezer: { color:"#A29BFE", bg:"#F0EEFF", emoji:"❄️", label:"Freezer" },
+  };
+  const meta = SM[tab];
+  const items = INGREDIENTS[tab] || [];
+  const total = Object.values(INGREDIENTS).reduce((s,l) => s+l.length, 0);
+
+  const tabs = Object.entries(SM).map(([key, m]) => {
+    const isActive = tab === key;
+    return `<div class="sec-tab ${isActive?"active":""}" onclick="setKitchenTab('${key}')" style="${isActive?`background:${m.color};`:""}">
+      <span class="emoji">${m.emoji}</span>
+      <span class="label" style="color:${isActive?"#fff":""}">${m.label}</span>
+      <span class="count" style="background:${isActive?"rgba(255,255,255,0.25)":m.bg};color:${isActive?"#fff":m.color}">${INGREDIENTS[key].length} items</span>
+    </div>`;
+  }).join("");
+
+  const ingCards = items.map(ing => `
+    <div class="ing-card">
+      <div style="width:44px;height:44px;border-radius:14px;background:${meta.bg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${ing.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:var(--txt)">${ing.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">${ing.detail}</div>
+      </div>
+      <span class="exp-badge ${expBadge(ing.status)}">${ing.expiry}</span>
+    </div>`).join("");
+
+  return `<div class="scroll">
+    <div style="padding:20px 20px 0;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>${logo}<div style="margin-top:10px">
+        <div class="f" style="font-size:26px;font-weight:700;color:var(--txt)">Smart Kitchen</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">${total} items · <span style="color:var(--coral);font-weight:700">2 expiring soon</span></div>
+      </div></div>
+      <div style="background:var(--lemon-bg);border:2px solid var(--lemon);border-radius:16px;padding:10px 14px;text-align:center">
+        <div class="f" style="font-size:22px;font-weight:700;color:var(--txt)">${total}</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600">items</div>
+      </div>
+    </div>
+
+    <div style="margin:14px 20px 0;background:var(--coral-bg);border:2px solid var(--coral);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">🥬</span>
+      <div style="flex:1">
+        <div class="f" style="font-size:13px;font-weight:700;color:var(--coral)">2 items expiring soon!</div>
+        <div style="font-size:11px;color:rgba(255,107,107,0.8);margin-top:1px">Spinach · Milk — use today</div>
+      </div>
+      <div style="background:var(--coral);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer">Cook Now</div>
+    </div>
+
+    <div style="display:flex;gap:10px;padding:16px 20px 0">${tabs}</div>
+
+    <div style="padding:20px 20px 10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${meta.color}"></div>
+        <span class="f" style="font-size:15px;font-weight:700;color:var(--txt)">${meta.label}</span>
+        <div style="background:${meta.bg};border:1.5px solid ${meta.color}40;border-radius:20px;padding:2px 10px">
+          <span style="font-size:11px;color:${meta.color};font-weight:600">${items.length}</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--teal);font-weight:600;cursor:pointer">+ Add</div>
+    </div>
+
+    <div style="padding:0 20px">${ingCards}</div>
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function setKitchenTab(tab) {
+  state.kitchenTab = tab;
+  render();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: KAI FEED
+// ─────────────────────────────────────────────
+function renderFeed() {
+  const filters = ["All","Italian","Asian","Indian","Breakfast","Salads","Mains","Quick"];
+  const f = state.feedFilter;
+  let recipes = state.feedRecipes;
+  if (f !== "All") {
+    recipes = f === "Quick"
+      ? recipes.filter(r => parseInt(r.time) <= 20)
+      : recipes.filter(r => r.cuisine === f);
+  }
+  const col1 = recipes.filter((_,i) => i%2===0);
+  const col2 = recipes.filter((_,i) => i%2===1);
+
+  const filterPills = filters.map(fi =>
+    `<div class="filter-pill ${f===fi?"active":""}" onclick="setFeedFilter('${fi}')">${fi}</div>`
+  ).join("");
+
+  const recipeCard = (r, tall) => {
+    const colors = cc(r.cuisine);
+    const heroH = tall ? 160 : 120;
+    const emojiSz = tall ? 52 : 38;
+    return `
+    <div class="recipe-card fade-in">
+      <div class="recipe-hero${tall?" tall":""}" style="height:${heroH}px;background:linear-gradient(145deg,${colors.bg},${colors.bg}cc)">
+        <span style="font-size:${emojiSz}px">${r.emoji}</span>
+        ${r.ready ? `<div style="position:absolute;top:8px;left:8px;background:var(--green-bg);border:1.5px solid rgba(0,184,148,0.4);border-radius:20px;padding:3px 8px;display:flex;align-items:center;gap:4px">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div>
+          <span style="font-size:9px;font-weight:700;color:var(--green)">Ready!</span>
+        </div>` : ""}
+        <div onclick="toggleSave(${r.id})" style="position:absolute;top:8px;right:8px;width:30px;height:30px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg width="13" height="13" fill="${r.saved?"#00C2B2":"none"}" stroke="${r.saved?"#00C2B2":"#9B8EA8"}" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+      </div>
+      <div style="padding:10px 11px 11px">
+        <div class="f" style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:5px;line-height:1.3">${r.title}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
+          <span style="font-size:10px;color:var(--muted)">⏱ ${r.time}</span>
+          <div style="width:3px;height:3px;border-radius:50%;background:var(--border)"></div>
+          <div class="cuisine-pill" style="background:${colors.bg};color:${colors.color}">${r.cuisine}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:18px;height:18px;border-radius:50%;background:${r.avColor};display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700">${r.by[0]}</div>
+            <span style="font-size:10px;color:var(--muted)">${r.by}</span>
+          </div>
+          <div onclick="toggleLike(${r.id})" style="display:flex;align-items:center;gap:3px;cursor:pointer">
+            <svg width="12" height="12" fill="${r.liked?"#FF6B6B":"none"}" stroke="${r.liked?"#FF6B6B":"#9B8EA8"}" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span style="font-size:9px;font-weight:600;color:${r.liked?"#FF6B6B":"#9B8EA8"}">${r.likes.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  return `<div class="scroll">
+    <div style="padding:20px 20px 14px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>${logo}<div style="font-size:13px;color:var(--muted);margin-top:4px">Get inspired to cook something</div></div>
+    </div>
+
+    <div style="margin:0 20px 14px;background:linear-gradient(135deg,var(--teal-dim),var(--teal-dim2));border:1px solid rgba(0,194,178,0.3);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:28px">🧊</span>
+      <div style="flex:1">
+        <div class="f" style="font-size:13px;font-weight:700;color:var(--teal-dark)">Cook from your fridge tonight</div>
+        <div style="font-size:11px;color:rgba(0,122,114,0.6);margin-top:2px">kAI found 4 recipes you can make now</div>
+      </div>
+      <div style="background:var(--teal);color:#fff;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;cursor:pointer">Cook →</div>
+    </div>
+
+    <div class="filters">${filterPills}</div>
+
+    <div style="padding:0 20px 12px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:var(--muted);font-weight:600">${recipes.length} recipes</div>
+      <div onclick="showScreen('import')" style="display:flex;align-items:center;gap:6px;background:var(--amber-bg);border:1.5px solid rgba(255,159,67,0.4);border-radius:20px;padding:6px 12px;cursor:pointer">
+        <span style="font-size:13px">📱</span>
+        <span class="f" style="font-size:11px;font-weight:700;color:var(--amber)">Import Recipe</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;padding:0 16px">
+      <div style="flex:1">${col1.map((r,i) => recipeCard(r, i%3===0)).join("")}</div>
+      <div style="flex:1;margin-top:28px">${col2.map((r,i) => recipeCard(r, i%3===1)).join("")}</div>
+    </div>
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function setFeedFilter(f) { state.feedFilter = f; render(); }
+function toggleSave(id) {
+  state.feedRecipes = state.feedRecipes.map(r => r.id===id ? {...r, saved: !r.saved} : r);
+  render();
+  showToast("Saved to Kollection!");
+}
+function toggleLike(id) {
+  state.feedRecipes = state.feedRecipes.map(r => r.id===id ? {...r, liked:!r.liked, likes:r.liked?r.likes-1:r.likes+1} : r);
+  render();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: KOLLECTION
+// ─────────────────────────────────────────────
+function renderKollection() {
+  const filters = ["All","Ready to Cook","Italian","Asian","Breakfast","Salads","Mains","Indian"];
+  const f = state.kollFilter;
+  const s = state.kollSearch;
+  const filtered = COOKBOOK.filter(r => {
+    const mf = f==="All" ? true : f==="Ready to Cook" ? r.ready : r.cuisine===f;
+    return mf && r.title.toLowerCase().includes(s.toLowerCase());
+  });
+  const readyC = COOKBOOK.filter(r=>r.ready).length;
+  const needC = COOKBOOK.filter(r=>!r.ready).length;
+
+  const filterPills = filters.map(fi =>
+    `<div class="filter-pill ${f===fi?"active":""}" style="${f===fi?"":"white-space:nowrap"}" onclick="setKollFilter('${fi}')">${fi}</div>`
+  ).join("");
+
+  const cards = filtered.length === 0
+    ? `<div style="text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:12px">📭</div>
+        <div class="f" style="font-size:16px;font-weight:700;color:var(--txt)">No recipes found</div>
+        <div style="font-size:13px;color:var(--muted)">Time to cook something amazing 🍳</div>
+      </div>`
+    : filtered.map(r => {
+        const colors = cc(r.cuisine);
+        return `<div class="koll-card">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:${colors.color};border-radius:20px 0 0 20px"></div>
+          <div style="width:52px;height:52px;background:${colors.bg};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;margin-left:4px">${r.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div class="f" style="font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.title}</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:3px">
+              <span style="font-size:11px;color:var(--muted)">⏱ ${r.time}</span>
+              <div class="cuisine-pill" style="background:${colors.bg};border:1.5px solid ${colors.color}40;color:${colors.color}">${r.cuisine}</div>
+            </div>
+          </div>
+          ${r.ready
+            ? `<div style="background:var(--green-bg);border:1.5px solid rgba(0,184,148,0.4);color:var(--green);font-size:9px;padding:4px 9px;border-radius:20px;font-weight:700;white-space:nowrap">✓ Ready</div>`
+            : `<div style="background:var(--amber-bg);border:1.5px solid rgba(255,159,67,0.4);color:var(--amber);font-size:9px;padding:4px 9px;border-radius:20px;font-weight:700;white-space:nowrap">🛒 ${r.missing} needed</div>`
+          }
+        </div>`;
+      }).join("");
+
+  return `<div class="scroll">
+    <div style="padding:20px 20px 0">
+      ${logo}
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px">
+        <div>
+          <div class="f" style="font-size:26px;font-weight:700;color:var(--txt)">My Kollection</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">${COOKBOOK.length} recipes saved</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="background:var(--green-bg);border:2px solid rgba(0,184,148,0.3);border-radius:14px;padding:8px 12px;text-align:center">
+            <div class="f" style="font-size:18px;font-weight:700;color:var(--green)">${readyC}</div>
+            <div style="font-size:9px;color:var(--green);font-weight:600">ready</div>
+          </div>
+          <div style="background:var(--amber-bg);border:2px solid rgba(255,159,67,0.3);border-radius:14px;padding:8px 12px;text-align:center">
+            <div class="f" style="font-size:18px;font-weight:700;color:var(--amber)">${needC}</div>
+            <div style="font-size:9px;color:var(--amber);font-weight:600">need items</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:10px">
+      <div style="background:linear-gradient(135deg,var(--teal-dim),var(--teal-dim2));border:1.5px solid rgba(0,194,178,0.3);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:var(--shadow-md)">
+        <div style="width:52px;height:52px;background:var(--teal);border-radius:16px;display:flex;align-items:center;justify-content:center">
+          <svg width="26" height="26" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="f" style="font-size:17px;font-weight:700;color:var(--teal-dark)">Cook Tonight</div>
+          <div style="font-size:12px;color:rgba(0,122,114,0.7);margin-top:2px">${readyC} recipes ready from your fridge</div>
+        </div>
+        <div style="width:36px;height:36px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div onclick="showScreen('import')" class="action-card" style="flex:1;background:var(--amber-bg);border:2px solid rgba(255,159,67,0.4)">
+          <div style="width:40px;height:40px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:20px">📱</div>
+          <div class="f" style="font-size:13px;font-weight:700;color:var(--txt)">Import Recipe</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">TikTok · Reels · Shorts</div>
+        </div>
+        <div class="action-card" style="flex:1;background:var(--lilac-bg);border:2px solid rgba(162,155,254,0.4)">
+          <div style="width:40px;height:40px;background:var(--lilac);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:20px">✨</div>
+          <div class="f" style="font-size:13px;font-weight:700;color:var(--txt)">Add with kAI</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Describe any dish</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:16px 20px 10px;background:var(--card);border:2px solid ${s?'var(--teal)':'var(--border)'};border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow)">
+      <svg width="16" height="16" fill="none" stroke="${s?'var(--teal)':'var(--muted)'}" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="koll-search" value="${s}" oninput="setKollSearch(this.value)" placeholder="Search your recipes..." style="flex:1;background:transparent;border:none;color:var(--txt);font-size:13px;font-family:'Nunito',sans-serif">
+      ${s?`<span onclick="setKollSearch('')" style="color:var(--muted);cursor:pointer;font-size:18px;line-height:1">×</span>`:""}
+    </div>
+
+    <div class="filters">${filterPills}</div>
+    <div style="padding:0 20px">${cards}</div>
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function setKollFilter(f) { state.kollFilter = f; render(); }
+function setKollSearch(v) { state.kollSearch = v; render(); setTimeout(() => { const el = document.getElementById("koll-search"); if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}, 10); }
+
+// ─────────────────────────────────────────────
+// SCREEN: KALENDA
+// ─────────────────────────────────────────────
+function renderKalenda() {
+  const day = state.kalendaDay;
+  const baseMeals = MEALS[day] || [];
+  const meals = baseMeals.map((m,i) => state.mealOverrides[`${day}-${i}`] || m);
+  const totalKcal = meals.reduce((s,m) => s+m.kcal, 0);
+
+  const weekDays = WEEK.map(w => `
+    <div class="week-day ${day===w.date?"active":""}" onclick="setKalendaDay(${w.date})">
+      <span style="font-size:9px;color:${day===w.date?"var(--teal)":"var(--muted)"}">${w.day}</span>
+      <span style="font-size:14px;font-weight:500;color:var(--txt)">${w.date}</span>
+      ${w.today ? `<div style="width:4px;height:4px;background:var(--teal);border-radius:50%"></div>` : w.meals ? `<div style="width:4px;height:4px;background:var(--muted);border-radius:50%"></div>` : ""}
+    </div>`).join("");
+
+  const macros = [
+    {label:"kcal",val:totalKcal},{label:"protein",val:"86g"},{label:"fat",val:"58g"},{label:"carbs",val:"195g"}
+  ].map(m => `
+    <div class="macro-card">
+      <div style="font-size:13px;font-weight:500;color:var(--txt)">${m.val}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">${m.label}</div>
+    </div>`).join("");
+
+  const mealCards = meals.length === 0
+    ? `<div style="text-align:center;padding:30px 20px">
+        <div style="font-size:32px;margin-bottom:10px">📅</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px">No meals planned for this day</div>
+        <div style="background:var(--teal);border-radius:12px;padding:10px 20px;display:inline-block;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:13px;font-weight:700;color:#fff">✦ Ask kAI to plan this day</div>
+      </div>`
+    : meals.map((m,i) => {
+        const isSwap = state.swapTarget === i;
+        const swapOpts = isSwap ? (SWAP_OPTIONS[m.type]||[]).map((alt,ai) => `
+          <div class="swap-option" onclick="doSwap(${i},${ai})">
+            <div style="width:40px;height:40px;background:var(--teal-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">${alt.emoji}</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:var(--txt)">${alt.name}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">${alt.note} · ${alt.kcal} kcal</div>
+            </div>
+            <div style="color:var(--teal);font-size:11px;font-weight:600;flex-shrink:0">Use →</div>
+          </div>`).join("") : "";
+
+        return `<div class="meal-card ${isSwap?"swapping":""}">
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:12px">
+            <div style="width:48px;height:48px;background:var(--teal-dim);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${m.emoji}</div>
+            <div style="flex:1">
+              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">${m.type}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--txt)">${m.name}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px">${m.note} · ${m.kcal} kcal</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+              <div style="background:var(--teal);border-radius:10px;padding:8px 12px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;text-align:center">Cook</div>
+              <div onclick="toggleSwap(${i})" style="background:${isSwap?"var(--teal-dim)":"var(--card2)"};border:1px solid ${isSwap?"var(--teal)":"var(--border)"};border-radius:10px;padding:8px 12px;font-size:10px;font-weight:600;color:${isSwap?"var(--teal)":"var(--muted)"};cursor:pointer;text-align:center">Swap</div>
+            </div>
+          </div>
+          ${isSwap ? `<div class="swap-sheet">
+            <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.6px;font-weight:700;margin-bottom:10px">Swap with:</div>
+            ${swapOpts}
+            <div onclick="toggleSwap(null)" style="text-align:center;padding:8px 0 2px;font-size:12px;color:var(--muted);cursor:pointer">Cancel</div>
+          </div>` : ""}
+        </div>`;
+      }).join("");
+
+  return `<div class="scroll">
+    <div style="padding:16px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        ${logo}
+        <div class="f" style="font-size:22px;font-weight:700;color:var(--txt);margin-top:6px">Meal Kalenda</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">kAI-generated · week of Mar 17</div>
+      </div>
+      <div style="background:var(--teal-dim);border:1.5px solid var(--teal);border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <svg width="14" height="14" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        <span style="font-size:11px;color:var(--teal);font-weight:600">Regenerate</span>
+      </div>
+    </div>
+
+    <div style="margin:0 16px 12px;background:var(--teal-dim);border:1.5px solid var(--teal);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--teal);font-weight:600">kAI plan generated</div>
+        <div style="font-size:10px;color:rgba(0,194,178,0.6)">Based on your fridge + taste history</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none">${weekDays}</div>
+    <div style="display:flex;gap:8px;padding:0 16px 12px">${macros}</div>
+    ${mealCards}
+    ${meals.length > 0 ? `<div style="margin:8px 16px 0;background:var(--teal);border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,194,178,0.4)">
+      <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span class="f" style="color:#fff;font-size:14px;font-weight:700">Add missing items to shopping list</span>
+    </div>` : ""}
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function setKalendaDay(d) { state.kalendaDay = d; state.swapTarget = null; render(); }
+function toggleSwap(i) { state.swapTarget = state.swapTarget===i ? null : i; render(); }
+function doSwap(mealIdx, altIdx) {
+  const meals = MEALS[state.kalendaDay] || [];
+  const m = state.mealOverrides[`${state.kalendaDay}-${mealIdx}`] || meals[mealIdx];
+  const alt = (SWAP_OPTIONS[m.type]||[])[altIdx];
+  if(alt) state.mealOverrides[`${state.kalendaDay}-${mealIdx}`] = {...alt, type:m.type};
+  state.swapTarget = null;
+  render();
+  showToast("Meal swapped!");
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: SCAN MODE SELECTOR
+// ─────────────────────────────────────────────
+function renderScanMode() {
+  const sel = state.scanMode;
+  const modeCards = Object.values(SCAN_MODES).map(m => {
+    const isSel = sel === m.key;
+    return `<div onclick="setScanMode('${m.key}')" style="margin-bottom:10px;background:${isSel?m.bg:"var(--card)"};border:${isSel?2:1}px solid ${isSel?m.color:"var(--border)"};border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:${isSel?"var(--shadow-md)":"var(--shadow)"};transition:all 0.2s">
+      <div style="width:52px;height:52px;border-radius:14px;background:${isSel?m.color+"20":m.bg};display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${m.emoji}</div>
+      <div style="flex:1">
+        <div class="f" style="font-size:15px;font-weight:700;color:${isSel?m.color:"var(--txt)"};margin-bottom:2px">${m.label}</div>
+        <div style="font-size:11px;color:${isSel?m.color+"90":"var(--muted)"};">${m.desc}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          ${m.tips.map(t => `<div style="background:${isSel?m.color+"15":"var(--card2)"};border-radius:20px;padding:2px 8px;font-size:9px;color:${isSel?m.color:"var(--muted)"};font-weight:600">${t}</div>`).join("")}
+        </div>
+      </div>
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${isSel?m.color:"var(--border)"};background:${isSel?m.color:"transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${isSel?`<svg width="12" height="12" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:""}
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div style="flex:1;background:var(--bg);display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:16px 16px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+      ${backBtn("navigate('Kitchen','kitchen')")}
+      <div>
+        <div class="f" style="font-size:18px;font-weight:700;color:var(--txt)">What are you scanning?</div>
+        <div style="font-size:11px;color:var(--muted)">kAI will identify everything in view</div>
+      </div>
+    </div>
+
+    <div style="margin:0 16px 14px;background:var(--teal-dim);border:1px solid rgba(0,194,178,0.4);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <div style="width:28px;height:28px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--teal);font-weight:600">✦ kAI Vision — Claude AI powered</div>
+        <div style="font-size:10px;color:rgba(0,194,178,0.7)">Real-time ingredient identification</div>
+      </div>
+    </div>
+
+    <div style="padding:0 16px;flex:1;overflow-y:auto">${modeCards}</div>
+
+    <div style="padding:12px 16px 20px;flex-shrink:0">
+      <div onclick="startScan()" style="background:var(--teal);color:#fff;border-radius:14px;padding:15px;text-align:center;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;box-shadow:0 6px 20px rgba(0,194,178,0.4)">
+        Scan ${SCAN_MODES[sel].label} ${SCAN_MODES[sel].emoji} →
+      </div>
+    </div>
+  </div>`;
+}
+
+function setScanMode(m) { state.scanMode = m; render(); }
+function startScan() {
+  state.scanPhase = "ready";
+  state.scanImage = null;
+  state.scannedItems = [];
+  state.addedScanItems = [];
+  state.scanError = null;
+  showScreen("scan");
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: AI SCAN (Real Claude Vision)
+// ─────────────────────────────────────────────
+function renderScan() {
+  const mode = SCAN_MODES[state.scanMode] || SCAN_MODES.fridge;
+  const phase = state.scanPhase;
+
+  if (phase === "ready") {
+    return `
+    <div class="scan-bg">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,${mode.color}20 0%,#0a0f0e 50%)"></div>
+      <div class="scan-line"></div>
+      <div class="scan-bracket" style="top:12%;left:10%;border-top:2.5px solid ${mode.color};border-left:2.5px solid ${mode.color}"></div>
+      <div class="scan-bracket" style="top:12%;right:10%;border-top:2.5px solid ${mode.color};border-right:2.5px solid ${mode.color}"></div>
+      <div class="scan-bracket" style="bottom:28%;left:10%;border-bottom:2.5px solid ${mode.color};border-left:2.5px solid ${mode.color}"></div>
+      <div class="scan-bracket" style="bottom:28%;right:10%;border-bottom:2.5px solid ${mode.color};border-right:2.5px solid ${mode.color}"></div>
+
+      <div style="position:relative;z-index:30;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+        ${backBtn("showScreen('scanmode')")}
+        <div style="background:rgba(0,0,0,0.6);border-radius:20px;padding:6px 14px;border:0.5px solid ${mode.color}60">
+          <span style="font-size:11px;color:${mode.color};font-weight:600">✦ ${mode.emoji} ${mode.label} Scan</span>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:5;padding:20px">
+        <div style="font-size:72px;margin-bottom:24px;filter:drop-shadow(0 0 30px ${mode.color}80)">${mode.emoji}</div>
+        <div class="f" style="color:#fff;font-size:22px;font-weight:700;margin-bottom:8px;text-align:center">Scan Your ${mode.label}</div>
+        <div style="color:#aaa;font-size:13px;text-align:center;max-width:260px;line-height:1.6">
+          Take a photo — kAI uses Claude Vision AI to identify every ingredient instantly
+        </div>
+        <div style="display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center">
+          ${["AI-powered","Instant results","Expiry tracking"].map(f => `<div style="background:${mode.color}20;border:1px solid ${mode.color}40;border-radius:20px;padding:5px 12px;font-size:11px;color:${mode.color};font-weight:600">${f}</div>`).join("")}
+        </div>
+      </div>
+
+      <div style="position:relative;z-index:30;padding:16px 24px 32px">
+        <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handleCapture(event)" style="display:none">
+        <div onclick="document.getElementById('camera-input').click()" style="background:${mode.color};border-radius:16px;padding:16px;text-align:center;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px ${mode.color}50">
+          <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take Photo to Scan
+        </div>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#555">
+          📱 Works on Android Chrome · Opens back camera
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (phase === "processing") {
+    const steps = ["Sending image to Claude Vision","Identifying ingredients","Estimating quantities","Checking expiry dates","Building your kitchen list"];
+    return `
+    <div style="flex:1;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+      ${state.scanImage ? `<div style="width:160px;height:120px;border-radius:16px;overflow:hidden;margin-bottom:32px;box-shadow:var(--shadow-lg);border:2px solid ${mode.color}"><img src="${state.scanImage}" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
+      <div style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,${mode.color}30,${mode.bg});border:2px solid ${mode.color}40;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:24px;animation:pulse 2s ease-in-out infinite">${mode.emoji}</div>
+      <div class="f" style="font-size:20px;font-weight:700;color:var(--txt);margin-bottom:8px;text-align:center">kAI is reading your ${mode.label}...</div>
+      <div style="font-size:13px;color:${mode.color};margin-bottom:32px" id="step-label">${steps[0]}</div>
+      ${steps.map((s,i) => `
+        <div class="processing-step">
+          <div id="step-${i}" style="width:22px;height:22px;border-radius:50%;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:#fff;font-weight:700;transition:all 0.3s"></div>
+          <span style="font-size:12px;color:var(--muted)" id="step-text-${i}">${s}</span>
+        </div>`).join("")}
+    </div>
+    <script>
+      let cs = 0;
+      const steps2 = ${JSON.stringify(steps)};
+      const iv = setInterval(() => {
+        if(cs > 0) {
+          const prev = document.getElementById('step-'+(cs-1));
+          if(prev){prev.style.background='var(--green)';prev.style.borderColor='var(--green)';prev.textContent='✓';}
+          const prevT = document.getElementById('step-text-'+(cs-1));
+          if(prevT) prevT.style.color='var(--green)';
+        }
+        if(cs < steps2.length) {
+          const cur = document.getElementById('step-'+cs);
+          if(cur){cur.style.background='${mode.color}';cur.style.borderColor='${mode.color}';cur.textContent='●';}
+          const curT = document.getElementById('step-text-'+cs);
+          if(curT){curT.style.color='var(--txt)';curT.style.fontWeight='600';}
+          const lbl = document.getElementById('step-label');
+          if(lbl) lbl.textContent = steps2[cs];
+        }
+        cs++;
+        if(cs > steps2.length) clearInterval(iv);
+      }, 600);
+    <\/script>`;
+  }
+
+  if (phase === "error") {
+    return `
+    <div style="flex:1;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+      <div style="font-size:64px;margin-bottom:20px">😔</div>
+      <div class="f" style="font-size:20px;font-weight:700;color:var(--txt);margin-bottom:8px;text-align:center">Scan didn't work</div>
+      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px;line-height:1.6;max-width:280px">
+        ${state.scanError || "Please add your Claude API key and try again. Make sure you have good lighting."}
+      </div>
+      <div onclick="resetScan()" style="background:var(--teal);border-radius:14px;padding:14px 28px;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;color:#fff">Try Again →</div>
+      <div onclick="showScreen('scanmode')" style="margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer">Go back</div>
+    </div>`;
+  }
+
+  // Results phase
+  const items = state.scannedItems;
+  const added = state.addedScanItems;
+
+  const itemCards = items.length === 0
+    ? `<div style="text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:12px">🔍</div>
+        <div class="f" style="font-size:16px;font-weight:700;color:var(--txt);margin-bottom:8px">No items detected</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Try better lighting or a closer shot</div>
+        <div onclick="resetScan()" style="background:var(--teal);border-radius:12px;padding:12px 24px;display:inline-block;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:14px;font-weight:700;color:#fff">Scan Again</div>
+      </div>`
+    : items.map(item => {
+        const ec = expBadge(item.status || "ok");
+        const isAdded = added.includes(item.name);
+        return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isAdded?"var(--teal-dim)":"var(--card)"};border:1.5px solid ${isAdded?"var(--teal)":"var(--border)"};border-radius:14px;margin-bottom:8px;transition:all 0.2s">
+          <div style="width:42px;height:42px;background:${mode.bg};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${item.emoji||"🥗"}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--txt)">${item.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${item.amount||""} · ${item.confidence||""}% confident</div>
+          </div>
+          <span class="exp-badge ${ec}">${item.expiry||"~1 week"}</span>
+          <div onclick="toggleScanAdd('${item.name.replace(/'/,"\\'")}',this)" style="background:${isAdded?"var(--teal)":"transparent"};border:1.5px solid ${isAdded?"var(--teal)":"var(--border)"};border-radius:10px;padding:6px 12px;cursor:pointer;color:${isAdded?"#fff":"var(--teal)"};font-size:11px;font-weight:700;white-space:nowrap;transition:all 0.2s">
+            ${isAdded?"✓ Added":"+ Add"}
+          </div>
+        </div>`;
+      }).join("");
+
+  return `<div style="flex:1;overflow-y:auto;background:var(--bg)">
+    <div style="background:${mode.bg};padding:20px 16px 16px;position:relative">
+      <div style="position:absolute;top:14px;left:16px">${backBtn("showScreen('scanmode')")}</div>
+      ${state.scanImage ? `<div style="width:80px;height:60px;border-radius:12px;overflow:hidden;margin:0 auto 12px;border:2px solid ${mode.color}"><img src="${state.scanImage}" style="width:100%;height:100%;object-fit:cover"></div>` : ""}
+      <div style="text-align:center;padding-top:${state.scanImage?"0":"8px"}">
+        <div style="width:56px;height:56px;background:${mode.color}20;border:2px solid ${mode.color};border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px">${mode.emoji}</div>
+        <div class="f" style="color:var(--txt);font-size:18px;font-weight:700">Scan Complete!</div>
+        <div style="color:${mode.color};font-size:12px;margin-top:4px">✦ ${items.length} ingredients detected by kAI</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+        ${[{val:items.length,label:"Detected",color:mode.color},{val:items.filter(r=>r.status==="bad"||r.status==="warn").length,label:"Expiring",color:"#FF9F43"},{val:added.length,label:"Added",color:"#00B894"}].map(s=>`
+          <div style="background:rgba(255,255,255,0.8);border-radius:10px;padding:8px 14px;text-align:center;border:1px solid ${s.color}30">
+            <div class="f" style="font-size:18px;font-weight:700;color:${s.color}">${s.val}</div>
+            <div style="font-size:9px;color:#888">${s.label}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div style="padding:14px 16px">
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;font-weight:700">✦ Detected by kAI Vision</div>
+      ${itemCards}
+      ${items.length > 0 ? `
+        <div style="background:var(--teal-dim);border:1.5px solid var(--teal);border-radius:12px;padding:12px 14px;margin-top:12px;margin-bottom:14px">
+          <div class="f" style="color:var(--teal);font-size:13px;font-weight:700;margin-bottom:4px">✦ Cook tonight with what you scanned</div>
+          <div style="color:rgba(0,194,178,0.7);font-size:11px">${added.length} items added · Check your Kollection</div>
+        </div>
+        <div onclick="finishScan()" style="background:var(--teal);border-radius:14px;padding:15px;text-align:center;color:#fff;font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,194,178,0.4)">Update My Kitchen →</div>
+        <div onclick="resetScan()" style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer">Scan again</div>
+      ` : ""}
+    </div>
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+function resetScan() {
+  state.scanPhase = "ready";
+  state.scanImage = null;
+  state.scannedItems = [];
+  state.addedScanItems = [];
+  state.scanError = null;
+  render();
+}
+
+function finishScan() {
+  navigate("Kitchen", "kitchen");
+  showToast("Kitchen updated!");
+}
+
+function toggleScanAdd(name, btn) {
+  const added = state.addedScanItems;
+  if (added.includes(name)) {
+    state.addedScanItems = added.filter(n => n !== name);
+    btn.textContent = "+ Add";
+    btn.style.background = "transparent";
+    btn.style.color = "var(--teal)";
+    btn.style.borderColor = "var(--border)";
+    btn.parentElement.style.background = "var(--card)";
+    btn.parentElement.style.borderColor = "var(--border)";
+  } else {
+    state.addedScanItems = [...added, name];
+    btn.textContent = "✓ Added";
+    btn.style.background = "var(--teal)";
+    btn.style.color = "#fff";
+    btn.style.borderColor = "var(--teal)";
+    btn.parentElement.style.background = "var(--teal-dim)";
+    btn.parentElement.style.borderColor = "var(--teal)";
+  }
+  // Update counter
+  const counter = document.querySelector('[data-counter="added"]');
+  if(counter) counter.textContent = state.addedScanItems.length;
+}
+
+// ── REAL CLAUDE VISION API ──
+async function handleCapture(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    const base64 = dataUrl.split(",")[1];
+    const mimeType = file.type || "image/jpeg";
+    state.scanImage = dataUrl;
+    state.scanPhase = "processing";
+    render();
+
+    await analyzeWithClaude(base64, mimeType);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeWithClaude(base64Image, mimeType) {
+  const mode = SCAN_MODES[state.scanMode] || SCAN_MODES.fridge;
+
+  // ⚠️ REPLACE THIS WITH YOUR CLAUDE API KEY
+  // In production, use a backend proxy — never expose keys in HTML
+  
+
+  try {
+    const response = await fetch("/api/scan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        
+        
+        
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mimeType, data: base64Image }
+            },
+            {
+              type: "text",
+              text: `You are a food recognition AI for KaiLens smart kitchen app.
+Analyse this ${mode.label} image and identify ALL visible food items.
+Return ONLY a valid JSON array — no explanation, no markdown, no backticks.
+Each item: {"name":"string","emoji":"single emoji","amount":"string","section":"${state.scanMode}","status":"ok|warn|bad","expiry":"string","confidence":0-100}
+Example: [{"name":"Eggs","emoji":"🥚","amount":"6 count","section":"fridge","status":"ok","expiry":"1 week","confidence":98}]
+Return empty array [] if nothing found.`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) throw new Error(`API ${response.status}: ${await response.text()}`);
+
+    const data = await response.json();
+    const text = data.content[0].text;
+    const clean = text.replace(/```json/g,"").replace(/```/g,"").trim();
+    const items = JSON.parse(clean);
+
+    state.scannedItems = Array.isArray(items) ? items : [];
+    state.scanPhase = "results";
+    render();
+  } catch(err) {
+    console.error("Scan error:", err);
+    state.scanError = err.message.includes("API_KEY") || err.message.includes("401")
+      ? "Invalid API key. Please add your Claude API key in the HTML file."
+      : err.message || "Could not analyse image. Please try again.";
+    state.scanPhase = "error";
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────
+// SCREEN: IMPORT RECIPE
+// ─────────────────────────────────────────────
+function renderImport() {
+  const url = state.importUrl;
+  const s = state.importState;
+  const examples = [
+    { icon:"🎵", url:"https://tiktok.com/@foodie/video/123456" },
+    { icon:"📸", url:"https://instagram.com/reels/abc123" },
+    { icon:"▶️", url:"https://youtube.com/shorts/xyz789" },
+  ];
+
+  return `<div class="scroll">
+    <div style="padding:16px 20px 12px;display:flex;align-items:center;gap:12px">
+      ${backBtn("navigate('Kollection','kollection')")}
+      <div>
+        <div class="f" style="font-size:22px;font-weight:700;color:var(--txt)">Import Recipe</div>
+        <div style="font-size:11px;color:var(--muted)">TikTok · Reels · YouTube Shorts</div>
+      </div>
+    </div>
+
+    <div style="margin:0 20px 16px;background:var(--card);border:2px solid var(--border);border-radius:18px;padding:16px;box-shadow:var(--shadow)">
+      <div class="f" style="font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px">How to import:</div>
+      ${[{n:"1",t:'Find a recipe video in TikTok, Reels, or Shorts'},{n:"2",t:'Tap Share → "More" → KaiLens'},{n:"3",t:"kAI instantly extracts the recipe 🍳"}].map(s=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-size:11px;font-weight:700;color:#fff">${s.n}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);padding-top:3px;line-height:1.4">${s.t}</div>
+        </div>`).join("")}
+    </div>
+
+    <div style="margin:0 20px 14px">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">Paste video link</div>
+      <div style="background:var(--card);border:2px solid ${url?"var(--teal)":"var(--border)"};border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)">
+        <svg width="16" height="16" fill="none" stroke="${url?"var(--teal)":"var(--muted)"}" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input id="import-url" value="${url}" oninput="setImportUrl(this.value)" placeholder="https://tiktok.com/..." style="flex:1;background:transparent;border:none;color:var(--txt);font-size:13px;font-family:'Nunito',sans-serif">
+        ${url?`<span onclick="setImportUrl('')" style="color:var(--muted);cursor:pointer;font-size:18px;line-height:1">×</span>`:""}
+      </div>
+    </div>
+
+    ${!url ? `<div style="padding:0 20px 16px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Try an example:</div>
+      ${examples.map(e=>`
+        <div onclick="setImportUrl('${e.url}')" style="padding:10px 14px;background:var(--card);border-radius:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid var(--border);display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)">
+          <span style="font-size:18px">${e.icon}</span>
+          <span style="font-size:11px;color:var(--muted)">${e.url}</span>
+        </div>`).join("")}
+    </div>` : ""}
+
+    <div style="margin:0 20px 16px;background:var(--teal-dim);border:2px solid rgba(0,194,178,0.3);border-radius:16px;padding:14px">
+      <div class="f" style="font-size:14px;font-weight:700;color:var(--teal-dark);margin-bottom:10px">✦ What kAI extracts:</div>
+      ${[["🍽️","Recipe title & description"],["🥕","Full ingredients with amounts"],["👨‍🍳","Step-by-step cooking guide"],["🔪","Required tools & equipment"],["⏱️","Cook time, serves & difficulty"]].map(([ic,lb])=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:16px">${ic}</span>
+          <span style="font-size:12px;color:var(--muted)">${lb}</span>
+        </div>`).join("")}
+    </div>
+
+    ${s === "idle" ? `<div style="margin:0 20px">
+      <div onclick="doImport()" style="background:${url?"var(--teal)":"var(--card2)"};border:${url?"none":"2px solid var(--border)"};border-radius:14px;padding:15px;text-align:center;color:${url?"#fff":"var(--muted)"};font-family:'Fredoka',sans-serif;font-size:15px;font-weight:700;cursor:${url?"pointer":"default"};box-shadow:${url?"0 6px 20px rgba(0,194,178,0.4)":"none"};transition:all 0.2s">
+        ${url ? "Extract Recipe with kAI →" : "Paste a link to continue"}
+      </div>
+    </div>` : ""}
+
+    ${s === "loading" ? `<div style="margin:0 20px;background:var(--teal-dim);border:2px solid rgba(0,194,178,0.4);border-radius:16px;padding:16px">
+      <div class="f" style="color:var(--teal);font-size:14px;font-weight:700;margin-bottom:12px;text-align:center">✦ kAI is reading the video...</div>
+      ${["Fetching video & caption","Identifying ingredients","Extracting cooking steps","Detecting tools needed"].map((step,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:22px;height:22px;border-radius:50%;background:${i<2?"var(--teal)":"var(--teal-dim)"};border:${i===2?`1.5px solid var(--teal)`:"none"};display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">${i<2?"✓":""}</div>
+          <span style="font-size:12px;color:${i<2?"var(--teal)":i===2?"var(--txt)":"var(--muted)"};font-weight:${i<2?600:400}">${step}</span>
+        </div>`).join("")}
+    </div>` : ""}
+
+    ${s === "done" ? `<div style="margin:0 20px;background:var(--green-bg);border:2px solid rgba(0,184,148,0.4);border-radius:14px;padding:14px;text-align:center">
+      <div class="f" style="color:var(--green);font-size:16px;font-weight:700">✓ Recipe extracted!</div>
+    </div>` : ""}
+
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function setImportUrl(v) {
+  state.importUrl = v;
+  state.importState = "idle";
+  render();
+  setTimeout(() => {
+    const el = document.getElementById("import-url");
+    if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }, 10);
+}
+
+function doImport() {
+  if (!state.importUrl.trim()) return;
+  state.importState = "loading";
+  render();
+  setTimeout(() => {
+    state.importState = "done";
+    render();
+    setTimeout(() => {
+      showToast("Recipe saved to Kollection!");
+      navigate("Kollection", "kollection");
+    }, 800);
+  }, 2800);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  navigate("Kitchen", "kitchen");
+});
+</script>
+</body>
+</html>
